@@ -32,7 +32,7 @@ export function Application() {
   const [todos, setTodos] = useState<Todo[]>([]);
 
   const currentProject = projectList.find(
-    (i) => i.id === currentProjectId,
+    (i) => i.id === currentProjectId
   ) as Project;
   return (
     <div className="p-4">
@@ -54,7 +54,7 @@ export function Application() {
             onSubmit={(e) => {
               e.preventDefault();
               const input = document.getElementById(
-                "project-input",
+                "project-input"
               ) as HTMLInputElement;
               const value = input.value as string;
               if (!value) return;
@@ -75,7 +75,7 @@ export function Application() {
       </div>
       <div className="flex flex-col">
         {todos
-          .filter((t) => t.projectId === currentProject)
+          .filter((t) => t.projectId === currentProject.id)
           .map((todo) => (
             <div key={todo.id} className="flex items-center gap-2">
               <Checkbox
@@ -89,7 +89,7 @@ export function Application() {
                         };
                       }
                       return t;
-                    }),
+                    })
                   )
                 }
                 checked={todo.completed}
