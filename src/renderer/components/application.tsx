@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { cn } from "@/lib/utils";
 
 type Project = {
   id: string;
@@ -17,7 +18,7 @@ type Project = {
 type Todo = {
   id: string;
   text: string;
-  completed: boolean;
+  state: "todo" | "done";
   projectId: string;
 };
 
@@ -35,76 +36,87 @@ export function Application() {
     (i) => i.id === currentProjectId
   ) as Project;
   return (
-    <div className="p-4">
-      <h1 className="bg-slate-400">Todo App</h1>
-      <h2>Project: {currentProject ? currentProject.name : "Inbox"}</h2>
-      <div className="flex flex-col">
-        {projectList.map((project) => (
-          <Button
-            key={project.id}
-            onClick={() => {
-              setCurrentProjectId(project.id);
+    <div className="">
+      <div className="flex min-h-screen">
+        <div className="bg-slate-200 p-4 min-h-screen">
+          <div className="flex flex-col gap-2 items-start ">
+            {projectList.map((project) => (
+              <Button
+                key={project.id}
+                onClick={() => {
+                  setCurrentProjectId(project.id);
+                }}
+                className={cn(
+                  currentProjectId === project.id && "bg-blue-200",
+                  "w-full"
+                )}
+              >
+                {project.name}
+              </Button>
+            ))}
+            <div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const input = document.getElementById(
+                    "project-input"
+                  ) as HTMLInputElement;
+                  const value = input.value as string;
+                  if (!value) return;
+                  setProjectList((list) => [
+                    ...list,
+                    {
+                      id: crypto.randomUUID(),
+                      name: value,
+                    },
+                  ]);
+                  input.value = "";
+                }}
+              >
+                <Input required id="project-input" type="text" />
+                <Button type="submit">add project</Button>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div className="p-4 min-h-screen">
+          <div className="flex flex-col">
+            <h2>
+              Current Project: {currentProject ? currentProject.name : "Inbox"}
+            </h2>
+            {todos
+              .filter((t) => t.projectId === currentProject.id)
+              .map((todo) => (
+                <div key={todo.id} className="flex items-center gap-2">
+                  <Checkbox
+                    onClick={() =>
+                      setTodos((l) =>
+                        l.map((t) => {
+                          if (t.id === todo.id) {
+                            return {
+                              ...t,
+                              completed: t.state === "done",
+                            };
+                          }
+                          return t;
+                        })
+                      )
+                    }
+                    checked={todo.state === "done"}
+                    id={`${todo.id}-checkbox`}
+                  />
+                  <label htmlFor={`${todo.id}-checkbox`}>{todo.text}</label>
+                </div>
+              ))}
+          </div>
+          <TodoForm
+            projectList={projectList}
+            addTodo={(t) => {
+              setTodos((list) => [...list, t]);
             }}
-          >
-            {project.name}
-          </Button>
-        ))}
-        <div>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const input = document.getElementById(
-                "project-input"
-              ) as HTMLInputElement;
-              const value = input.value as string;
-              if (!value) return;
-              setProjectList((list) => [
-                ...list,
-                {
-                  id: crypto.randomUUID(),
-                  name: value,
-                },
-              ]);
-              input.value = "";
-            }}
-          >
-            <Input required id="project-input" type="text" />
-            <Button type="submit">add project</Button>
-          </form>
+          />
         </div>
       </div>
-      <div className="flex flex-col">
-        {todos
-          .filter((t) => t.projectId === currentProject.id)
-          .map((todo) => (
-            <div key={todo.id} className="flex items-center gap-2">
-              <Checkbox
-                onClick={() =>
-                  setTodos((l) =>
-                    l.map((t) => {
-                      if (t.id === todo.id) {
-                        return {
-                          ...t,
-                          completed: !t.completed,
-                        };
-                      }
-                      return t;
-                    })
-                  )
-                }
-                checked={todo.completed}
-                id={`${todo.id}-checkbox`}
-              />
-              <label htmlFor={`${todo.id}-checkbox`}>{todo.text}</label>
-            </div>
-          ))}
-      </div>
-      <TodoForm
-        projectList={projectList}
-        addTodo={(t) => {
-          setTodos((list) => [...list, t]);
-        }}
-      />
     </div>
   );
 }
@@ -122,20 +134,20 @@ function TodoForm({
     const value = input.value as string;
     const projectSelect = document.querySelector("select") as HTMLSelectElement;
     const projectId = projectSelect.value;
-    if (!value || !projectId) return;
+    if (!value) return;
     addTodo({
       id: crypto.randomUUID(),
       text: value,
-      completed: false,
-      projectId: "0",
+      state: "todo",
+      projectId: projectId || "0",
     });
     input.value = "";
   };
   return (
     <form onSubmit={onSubmit}>
       <Input id="todo-input" type="text" />
-      <Select required>
-        <SelectTrigger className="w-[180px]">
+      <Select>
+        <SelectTrigger>
           <SelectValue placeholder="Select a project" />
         </SelectTrigger>
         <SelectContent className="bg-white">
